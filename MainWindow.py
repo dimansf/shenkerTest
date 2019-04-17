@@ -1,39 +1,45 @@
 from PyQt5.QtWidgets import *
 
 class MainWindow(QWidget):
-    def __init__(self):
+    def __init__(self, task):
         super().__init__()
-        self.btn = None
-        # self.handle = handler
-        self.vbox = QVBoxLayout()
-        self.setLayout(self.vbox)
+        self.task = task
+        self.flag = 0
         self.buildComponents()
         
 
     def buildComponents(self):
-        
-        self.vbox.addWidget(self.chapter1())
-        self.vbox.addWidget(self.chapter2())
-        self.vbox.addWidget(self.chapter3())
-        self.vbox.addWidget(self.chapter4())
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.chapter1())
+        vbox.addWidget(self.chapter2())
+        vbox.addWidget(self.chapter3())
+        vbox.addWidget(self.chapter4())
+        self.setLayout(vbox)
         #vbox.addLayout(self.chapter3())
         # vbox.addLayout(self.chapter4())
       
 
     def openFileDialog(self):
-        self.path = QFileDialog.getOpenFileName(self, 'Open file')[0]
+        path = QFileDialog.getOpenFileName(self, 'Открыть файл...')[0]
+        if(self.task.setMainFile(path) == 0):
+            self.flag = 0
+            self.filePathLabel.setText('Некорректный файл или путь!')
+        else:
+            self.flag = 1
+            self.filePathLabel.setText(path)
+            
 
     def chapter1(self):
         vbox = QVBoxLayout()
-        # 1 row
-        vbox.addWidget(QLabel('Выберите файл', self))
+        
+        vbox.addWidget(QLabel('Открыть файл'))
         
         hbox = QHBoxLayout()
-        btn = QPushButton('Выбрать...', self) 
+        btn = QPushButton('Открыть...') 
         btn.clicked.connect(self.openFileDialog)
         hbox.addWidget(btn)
-        self.lbl = QLabel()
-        hbox.addWidget(self.lbl)
+        self.filePathLabel = QLabel()
+        hbox.addWidget(self.filePathLabel)
         # 2 row
         vbox.addLayout(hbox)
         qw = QWidget()
@@ -42,11 +48,13 @@ class MainWindow(QWidget):
 
     def chapter2(self):
         vbox = QVBoxLayout()
-        vbox.addWidget(QLabel('Дата подачи'))
+        vbox.addWidget(QLabel('Задайте дату забора заказа'))
         self.calendar = QCalendarWidget()
         # self.calendar.setMaximumWidth(150)
         vbox.addWidget(self.calendar)
-        vbox.addWidget(QLabel('Если выбраны выходные дни, дата автоматически переносится на ближайший рабочий день'))
+        vbox.addWidget(QLabel('Если выставлен выходной день, дата переносится на ближайщий рабочий день следующей недели'))
+        self.calendarLabel = QLabel('')
+        vbox.addWidget(self.calendarLabel)
         vbox.addStretch(1)
         qw = QWidget()
         qw.setLayout(vbox)
@@ -55,8 +63,8 @@ class MainWindow(QWidget):
 
     def chapter3(self):
         vbox = QVBoxLayout()
-        vbox.addWidget(QLabel('Сгенерировать файлы по бланкам'))
-        btn = QPushButton('Сгенерировать')
+        vbox.addWidget(QLabel('Сгенерировать заявки из шаблонов'))
+        btn = QPushButton('Старт')
         btn.clicked.connect(self.formBid)
         vbox.addWidget(btn)
         qw = QWidget()
@@ -67,7 +75,7 @@ class MainWindow(QWidget):
         hbox = QHBoxLayout()
         self.labelDone = QLabel()
         hbox.addWidget(self.labelDone)
-        btn = QPushButton('Открыть папку')
+        btn = QPushButton('Открыть папку с бланками')
         btn.clicked.connect(self.openDir)
         hbox.addWidget(btn)
         qw = QWidget()
@@ -75,9 +83,13 @@ class MainWindow(QWidget):
         return qw
 
     def formBid(self):
-        self.handle(self.path)
+        if(self.flag == 0):
+            self.filePathLabel.setText('Не выбран файл или выбран некорректный файл')
+        else:
+            curDate = self.calendar.selectedDate().getDate()
+            self.calendarLabel.setText(str(curDate))
+            self.task.formBid(curDate)
 
     def openDir(self):
-        pass
-
+        self.task.openDir()
         
