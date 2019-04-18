@@ -55,7 +55,7 @@ class Task():
     def openDir(self):
         import subprocess
         subprocess.Popen('explorer.exe "' + '\\'.join(self.files['xmls'].split('/')) + '"')
-        print('explorer.exe "' + '\\'.join(self.files['xmls'].split('/')) + '"')
+        # print('explorer.exe "' + '\\'.join(self.files['xmls'].split('/')) + '"')
 
     def addDates(self, dates):
         daysSheet = self.getSheet('graph')
