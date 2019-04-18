@@ -29,6 +29,17 @@ class MainWindow(QWidget):
             self.filePathLabel.setText(path)
             
 
+    def formBid(self):
+        if(self.flag == 0):
+            self.filePathLabel.setText('Не выбран файл или выбран некорректный файл')
+        else:
+            curDate = self.calendar.selectedDate().getDate()
+            self.calendarLabel.setText(str(curDate))
+            self.task.formBid(curDate)
+
+    def openDir(self):
+        self.task.openDir()
+        
     def chapter1(self):
         vbox = QVBoxLayout()
         
@@ -82,14 +93,4 @@ class MainWindow(QWidget):
         qw.setLayout(hbox)
         return qw
 
-    def formBid(self):
-        if(self.flag == 0):
-            self.filePathLabel.setText('Не выбран файл или выбран некорректный файл')
-        else:
-            curDate = self.calendar.selectedDate().getDate()
-            self.calendarLabel.setText(str(curDate))
-            self.task.formBid(curDate)
-
-    def openDir(self):
-        self.task.openDir()
         

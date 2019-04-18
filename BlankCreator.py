@@ -1,6 +1,6 @@
 from xlwt import *
 import xlutils.copy
-
+from os import makedirs
 
 class BlankCreator():
 
@@ -22,9 +22,13 @@ class BlankCreator():
             sheet.write(34, 1, float(block[9]) / 1.15)
             sheet.write(34, 2, block[8])
             sheet.write(34, 3, block[9])
-            sheet.write(43, 2, date)
+            sheet.write(43, 2, str(date))
             sheet.write(48, 2, block[2])
             sheet.write(51, 2, block[18])
             sheet.write(52, 1, block[7])
             # sheet.write(52, 2, block[18])
-            wb.save(self.path + '\\' + block[15]+block[12] + '.xls')
+            try:
+                wb.save(self.path + '/' + block[15]+block[12] + '.xls')
+            except FileNotFoundError:
+                makedirs(self.path, exist_ok=True)
+                wb.save(self.path + '/' + block[15]+block[12] + '.xls')

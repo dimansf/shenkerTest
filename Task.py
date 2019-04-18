@@ -7,11 +7,14 @@ class Task():
     '''
     Главный класс задачи формирования бланков
     '''
-
-    def __init__(self, fileList):
-        self.files = fileList
-        # print(fileList)
-        self.formBid()
+    def __init__(self, fileList=None):
+        self.files = None
+        if fileList:
+            self.files = fileList
+        # self.formBid()
+        self.wb = None
+        self.files = {}
+        self.eSheet = None
 
     def getWB(self, filename):
         return xlrd.open_workbook(self.files[filename], on_demand=True)
@@ -22,11 +25,20 @@ class Task():
     
 
     def setMainFile(self, filename):
-        if(filename.split('\\')[-1].split('.')[-1] == 'xls'):
+        if filename.split('\\')[-1].split('.')[-1] == 'xls':
             self.files['regions'] = filename
+            print()
+            # return 0
+            self.files['path'] = '/'.join(filename.split('/')[0:-1])
+            self.files['bi_base'] = self.files['path']+'/BI_Base.xls'
+            self.files['graph'] = self.files['path']+'/Graph.xls'
+            self.files['cities'] = self.files['path']+'/Cities.xls'
+            self.files['template'] = self.files['path']+'/Blank.xlt'
+            self.files['xmls'] = self.files['path']+'/xmls'
+            print(self.files)
             return 1
-        else:
-            return 0
+        
+        return 0
 
     def formBid(self, dateTuple=''):
         mergedSheet = self.mergeMainSheet()
@@ -42,7 +54,8 @@ class Task():
 
     def openDir(self):
         import subprocess
-        subprocess.Popen('explorer ' + self.files['xmls'])
+        subprocess.Popen('explorer.exe "' + '\\'.join(self.files['xmls'].split('/')) + '"')
+        print('explorer.exe "' + '\\'.join(self.files['xmls'].split('/')) + '"')
 
     def addDates(self, dates):
         daysSheet = self.getSheet('graph')
@@ -52,11 +65,9 @@ class Task():
 
     def belongsCodesAndCities(self, sheet):
         citiesBook = self.getSheet('cities')
-        self.codes = self.getSheet('bi_base')
+        codes = self.getSheet('bi_base')
         for r in sheet.values():
-            # print('\n\n' + str(len(r)))
-            # break
-            for row in self.codes.get_rows():
+            for row in codes.get_rows():
                 if(row[2].value == r[10]):
                     r.append(self.toD(row[0].value))
                     r.append(self.toD(row[1].value))
@@ -110,10 +121,6 @@ class Task():
         e = []
         for i in range(len(e1)):
             if i == 2:
-        #                try:
-         #                   num = str(int(e1[i]))
-          #             except ValueError:
-           #                 num = e1[i]
                 e.insert(i,  str(e1[i]) + ',  ' + str(e2[i]))
                 continue
             if i in range(7, 10):
