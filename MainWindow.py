@@ -36,6 +36,7 @@ class MainWindow(QWidget):
             curDate = self.calendar.selectedDate().getDate()
             self.calendarLabel.setText(str(curDate))
             self.task.formBid(curDate)
+            self.notifyLbl.setText('Готово!')
 
     def openDir(self):
         self.task.openDir()
@@ -78,6 +79,8 @@ class MainWindow(QWidget):
         btn = QPushButton('Старт')
         btn.clicked.connect(self.formBid)
         vbox.addWidget(btn)
+        self.notifyLbl = QLabel()
+        vbox.addWidget(self.notifyLbl)
         qw = QWidget()
         qw.setLayout(vbox)
         return qw

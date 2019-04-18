@@ -2,6 +2,10 @@ import xlrd
 import xlwt
 import DateOperator
 import BlankCreator
+from datetime import *
+from os import makedirs
+
+
 
 class Task():
     '''
@@ -11,13 +15,16 @@ class Task():
         self.files = None
         if fileList:
             self.files = fileList
-        # self.formBid()
+        else:
+            self.files = {}
         self.wb = None
-        self.files = {}
-        self.eSheet = None
+        daysSheet = self.getSheet('graph')
+        self.dater = DateOperator.Dater(daysSheet)
+        self.bc = None
+        self.f = open('log.txt','w')
+        # self.formBid((2019,4, 17))
+        
 
-    def getWB(self, filename):
-        return xlrd.open_workbook(self.files[filename], on_demand=True)
 
     def getSheet(self, filename, index=0):
         self.wb = xlrd.open_workbook(self.files[filename], 'r')
@@ -27,58 +34,64 @@ class Task():
     def setMainFile(self, filename):
         if filename.split('\\')[-1].split('.')[-1] == 'xls':
             self.files['regions'] = filename
-            print()
-            # return 0
             self.files['path'] = '/'.join(filename.split('/')[0:-1])
             self.files['bi_base'] = self.files['path']+'/BI_Base.xls'
             self.files['graph'] = self.files['path']+'/Graph.xls'
             self.files['cities'] = self.files['path']+'/Cities.xls'
             self.files['template'] = self.files['path']+'/Blank.xlt'
             self.files['xmls'] = self.files['path']+'/xmls'
+            self.bc = BlankCreator.BlankCreator(self.files['xmls'], self.files['template'])
             print(self.files)
             return 1
-        
         return 0
 
-    def formBid(self, dateTuple=''):
-        mergedSheet = self.mergeMainSheet()
-        self.eSheet = self.belongsCodesAndCities(mergedSheet)
-        # (2019, 4, 17)
-        self.addDates(dateTuple)
-        bc = BlankCreator.BlankCreator(self.files['xmls'], self.getWB('template'))
-        for row in self.eSheet.values():
-            bc.create(row, dateTuple)
-            # break
+    def formBid(self, dateTuple=None):
+        try:
+            y,m,d = dateTuple
+            dateShipment = datetime(y,m,d)
+        except TypeError:
+            dateShipment = None
 
-        print(self.eSheet)
+        # вернул массив вида [ [var, var2,...], ...]
+        elements = self.sheetToList(self.getSheet('regions'))
+        elements = self.belongCodes(elements)
+        elements = self.mergeMainSheet(elements)
+        elements = elements.values()
+        elements = self.belongCities(elements)
+        # (2019, 4, 17)
+        self.dater.addDates(elements, dateShipment)
+        for row in elements:
+            self.bc.create(row, dateShipment)
+        
+        self.f.write('\n'.join(str(elements).split('],')))
+       
 
     def openDir(self):
         import subprocess
-        subprocess.Popen('explorer.exe "' + '\\'.join(self.files['xmls'].split('/')) + '"')
-        # print('explorer.exe "' + '\\'.join(self.files['xmls'].split('/')) + '"')
+        from pathlib import Path
+        path1 = '\\'.join(self.files['xmls'].split('/'))
+        cmnd = 'explorer.exe "' + path1 + '"'
+        subprocess.Popen(cmnd)
+        print(cmnd)
+        return 1
 
-    def addDates(self, dates):
-        daysSheet = self.getSheet('graph')
-        dater = DateOperator.Dater(daysSheet)
-        dater.addDates(self.eSheet, dates)
-
-
-    def belongsCodesAndCities(self, sheet):
+    def belongCities(self, sheet):
         citiesBook = self.getSheet('cities')
-        codes = self.getSheet('bi_base')
-        for r in sheet.values():
-            for row in codes.get_rows():
-                if(row[2].value == r[10]):
-                    r.append(self.toD(row[0].value))
-                    r.append(self.toD(row[1].value))
-
-        # print(sheet)
-        for r in sheet.values():
-            for c in citiesBook.get_rows():
+        for row in sheet:
+            for rowCities in citiesBook.get_rows():
                 # print(str(r[16]) + ' ' + self.toD(c[1].value))
-                if r[16] == self.toD(c[0].value):
-                    r.append(self.toD(c[1].value))
-        # print(sheet)
+                if row[16] == self.toD(rowCities[0].value):
+                    row.append(self.toD(rowCities[1].value))
+        return sheet
+    
+    def belongCodes(self, sheet):
+        ''' @var sheet [ [], ... ]'''
+        codes = self.getSheet('bi_base')
+        for row in sheet:
+            for rowBibase in codes.get_rows():
+                if(rowBibase[2].value == row[10]):
+                    row.append(self.toD(rowBibase[0].value)) # код юзера
+                    row.append(self.toD(rowBibase[1].value)) # код города
         return sheet
 
     def toD(self, fl):
@@ -87,15 +100,13 @@ class Task():
         except ValueError:
             return str(fl)
 
-    def mergeMainSheet(self):
-        elements = self.sheetToList(self.getSheet('regions'))
-        # print(elements)
+    def mergeMainSheet(self, elements):
         els = {}
         for i in range(len(elements)):
             newWawe = True
-            specialKey = elements[i][4] + ' ' + elements[i][10]
+            specialKey = elements[i][15] + '_' + elements[i][12]
             for k in range(i+1, len(elements)):
-                if(self.compareRow(elements[i], elements[k])):
+                if(elements[i][15] == elements[k][15]):
                     # если ключ есть и это новый цикл значит ничего не делаем
                     if els.get(specialKey) is not None:
                         if newWawe:
@@ -103,6 +114,8 @@ class Task():
                         else:
                             els[specialKey] = self.mergeRow(
                                 els[specialKey], elements[k])
+                                
+                            
                     else:
                         els[specialKey] = self.mergeRow(
                             elements[k], elements[i])
@@ -112,10 +125,6 @@ class Task():
         # print(els)
         return els
 
-    def compareRow(self, e1, e2):
-        if e1[10] == e2[10] and e1[4] == e2[4]:
-            return True
-        return False
 
     def mergeRow(self, e1, e2):
         e = []
@@ -142,8 +151,9 @@ class Task():
             n = []
             for i in range(len(cells)):
                 if i == 0:
-                    n.append(xlrd.xldate_as_tuple(
-                        cells[i].value, self.wb.datemode))
+                    d = xlrd.xldate_as_tuple(
+                        cells[i].value, self.wb.datemode)
+                    n.append(d[0:3])
                     continue
                 if i == 2:
                     n.append(str(int(cells[i].value)))

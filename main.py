@@ -18,7 +18,6 @@ if __name__ == '__main__':
     task = Task.Task(config)
     w = MainWindow.MainWindow(task)
     w.resize(400, 300)
-    # w.move(300, 300)
     w.setWindowTitle('Шенкер by dimansf')
     w.show()
     
