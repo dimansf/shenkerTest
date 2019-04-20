@@ -37,8 +37,12 @@ class MainWindow(QWidget):
             self.calendarLabel.setText(str(curDate))
             self.task.formBid(curDate)
             self.notifyLbl.setText('Готово!')
+            self.flag = 2
 
     def openDir(self):
+        if self.flag != 2:
+            self.notifyLbl.setText('Файлы еще не сформированы')
+            return
         self.task.openDir()
         
     def chapter1(self):

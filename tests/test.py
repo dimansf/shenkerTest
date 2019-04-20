@@ -27,3 +27,8 @@ from xlrd import *
 r1 = [r"C:\Users\dimansf\Documents\projects\python\dbshenker\files\Blank.xlt"]
 wb = open_workbook(r1[0], 'r')
 # BlankCreator('/', wb).create()
+
+r12 = {1:2}
+t = 'C:/12'
+print(len(t.split('\\')))
+print(len(r12))

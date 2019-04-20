@@ -12,16 +12,16 @@ class Task():
     Главный класс задачи формирования бланков
     '''
     def __init__(self, fileList=None):
-        self.files = None
         if fileList:
             self.files = fileList
         else:
             self.files = {}
+            
         self.wb = None
-        daysSheet = self.getSheet('graph')
-        self.dater = DateOperator.Dater(daysSheet)
+        self.dater = None
         self.bc = None
         self.f = open('log.txt','w')
+        # self.setMainFile(r"C:\Users\dimansf\Documents\projects\python\dbshenker\files\Regions.xls")
         # self.formBid((2019,4, 17))
         
 
@@ -34,18 +34,27 @@ class Task():
     def setMainFile(self, filename):
         if filename.split('\\')[-1].split('.')[-1] == 'xls':
             self.files['regions'] = filename
-            self.files['path'] = '/'.join(filename.split('/')[0:-1])
+            if len(filename.split('\\')) == 1:
+                self.files['path'] = '/'.join(filename.split('/')[0:-1])
+            else:
+                self.files['path'] = '/'.join(filename.split('\\')[0:-1])
+            print(filename)
+            print('path - ' + self.files['path'])
             self.files['bi_base'] = self.files['path']+'/BI_Base.xls'
             self.files['graph'] = self.files['path']+'/Graph.xls'
             self.files['cities'] = self.files['path']+'/Cities.xls'
             self.files['template'] = self.files['path']+'/Blank.xlt'
             self.files['xmls'] = self.files['path']+'/xmls'
             self.bc = BlankCreator.BlankCreator(self.files['xmls'], self.files['template'])
+            self.dater = DateOperator.Dater(self.getSheet('graph'))
+
             print(self.files)
             return 1
         return 0
 
     def formBid(self, dateTuple=None):
+        if(len(self.files) != 7):
+            return 0
         try:
             y,m,d = dateTuple
             dateShipment = datetime(y,m,d)
@@ -56,6 +65,7 @@ class Task():
         elements = self.sheetToList(self.getSheet('regions'))
         elements = self.belongCodes(elements)
         elements = self.mergeMainSheet(elements)
+        dict1 = elements
         elements = elements.values()
         elements = self.belongCities(elements)
         # (2019, 4, 17)
@@ -104,9 +114,9 @@ class Task():
         els = {}
         for i in range(len(elements)):
             newWawe = True
-            specialKey = elements[i][15] + '_' + elements[i][12]
+            specialKey = elements[i][15] + '_' + elements[i][10]
             for k in range(i+1, len(elements)):
-                if(elements[i][15] == elements[k][15]):
+                if elements[i][15] == elements[k][15] and elements[i][10] == elements[k][10]:
                     # если ключ есть и это новый цикл значит ничего не делаем
                     if els.get(specialKey) is not None:
                         if newWawe:
@@ -122,7 +132,7 @@ class Task():
                         newWawe = False
             if newWawe and els.get(specialKey) == None:
                 els[specialKey] = elements[i]
-        # print(els)
+        # print(len(tm1))
         return els
 
 
