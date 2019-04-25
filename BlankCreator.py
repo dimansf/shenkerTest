@@ -14,9 +14,9 @@ class BlankCreator():
     @var array[] block 
     @var string date   
     '''
-    def create(self, row, date=None):
+    def create(self, row, date=None, k=0):
         makedirs(self.path, exist_ok=True)
-        file1 = self.path+'/'+row[15]+ '_'+row[12]+'_'+row[10]+'.xlt'
+        file1 = self.path+'/'+row[15]+ '_'+row[12]+'_'+str(k+1)+'.xlt'
         print(file1)
         shutil.copy(self.templ, file1)
         rb = xlrd.open_workbook(file1, formatting_info=True)

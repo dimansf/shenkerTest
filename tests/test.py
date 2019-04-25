@@ -12,23 +12,12 @@ print(r[:-r.count('*')])
 
 
 from datetime import *
-
-t = datetime(2017,2,25)
-print(t)
-d = timedelta(days=30)
+from time import *
+t = date.today()
+print(t.year, t.month, t.day)
+d = timedelta(3)
+# print(t.isoweek())
 # d.days = 30
 s = t - d
-print(s.date())
+print(s)
 
-
-from BlankCreator import *
-from xlrd import *
-
-r1 = [r"C:\Users\dimansf\Documents\projects\python\dbshenker\files\Blank.xlt"]
-wb = open_workbook(r1[0], 'r')
-# BlankCreator('/', wb).create()
-
-r12 = {1:2}
-t = 'C:/12'
-print(len(t.split('\\')))
-print(len(r12))

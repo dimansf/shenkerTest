@@ -12,15 +12,19 @@ class Task():
     Главный класс задачи формирования бланков
     '''
     def __init__(self, fileList=None):
-        if fileList:
-            self.files = fileList
-        else:
-            self.files = {}
-            
+        self.f = open('log.txt','w')
         self.wb = None
         self.dater = None
         self.bc = None
-        self.f = open('log.txt','w')
+        if fileList:
+            self.files = fileList
+            self.setMainFile(r"C:\Users\dimansf\Documents\projects\python\dbshenker\files\Regions.xls")
+            self.formBid((2019, 4, 17))
+            import sys
+            sys.exit()
+        else:
+            self.files = {}
+            
         # self.setMainFile(r"C:\Users\dimansf\Documents\projects\python\dbshenker\files\Regions.xls")
         # self.formBid((2019,4, 17))
         
@@ -52,6 +56,7 @@ class Task():
             return 1
         return 0
 
+
     def formBid(self, dateTuple=None):
         if(len(self.files) != 7):
             return 0
@@ -65,13 +70,14 @@ class Task():
         elements = self.sheetToList(self.getSheet('regions'))
         elements = self.belongCodes(elements)
         elements = self.mergeMainSheet(elements)
-        dict1 = elements
         elements = elements.values()
         elements = self.belongCities(elements)
         # (2019, 4, 17)
         self.dater.addDates(elements, dateShipment)
+        inc = 1
         for row in elements:
-            self.bc.create(row, dateShipment)
+            self.bc.create(row, dateShipment, inc)
+            inc = inc + 1
         
         self.f.write('\n'.join(str(elements).split('],')))
        
@@ -85,6 +91,7 @@ class Task():
         print(cmnd)
         return 1
 
+
     def belongCities(self, sheet):
         citiesBook = self.getSheet('cities')
         for row in sheet:
@@ -94,6 +101,7 @@ class Task():
                     row.append(self.toD(rowCities[1].value))
         return sheet
     
+
     def belongCodes(self, sheet):
         ''' @var sheet [ [], ... ]'''
         codes = self.getSheet('bi_base')
@@ -104,36 +112,44 @@ class Task():
                     row.append(self.toD(rowBibase[1].value)) # код города
         return sheet
 
+
     def toD(self, fl):
         try:
             return str(int(fl))
         except ValueError:
             return str(fl)
 
+
+    def getOptimalDate(self):
+        v = date.today()
+        if v.isoweekday() > 5:
+            v = v + timedelta(8-v.isoweekday())
+            print(v)
+            return (v.year, v.month, v.day)
+        return (v.year, v.month, v.day)
+
+
     def mergeMainSheet(self, elements):
         els = {}
         for i in range(len(elements)):
-            newWawe = True
             specialKey = elements[i][15] + '_' + elements[i][10]
-            for k in range(i+1, len(elements)):
-                if elements[i][15] == elements[k][15] and elements[i][10] == elements[k][10]:
-                    # если ключ есть и это новый цикл значит ничего не делаем
-                    if els.get(specialKey) is not None:
-                        if newWawe:
-                            continue
-                        else:
-                            els[specialKey] = self.mergeRow(
-                                els[specialKey], elements[k])
-                                
-                            
-                    else:
-                        els[specialKey] = self.mergeRow(
-                            elements[k], elements[i])
-                        newWawe = False
-            if newWawe and els.get(specialKey) == None:
-                els[specialKey] = elements[i]
+            self.mergeRowV2(els, elements[i], specialKey, 0)
+            self.f.write('\n\n\ni' + str(i))
+            self.f.write(']\n'.join(str(els).split(']')))
         # print(len(tm1))
         return els
+
+
+    def mergeRowV2(self, els, v2, specialKey, cnt):
+        newsk = specialKey + str(cnt)
+        if els.get(newsk) is None:
+            els[newsk] = v2
+        else:
+            if (els[newsk][9]+v2[9])/1.15 > 32.0:
+                self.mergeRowV2(els, v2, specialKey, cnt + 1)
+            else:
+                els[newsk] = self.mergeRow(
+                    els[newsk], v2)
 
 
     def mergeRow(self, e1, e2):
@@ -150,6 +166,7 @@ class Task():
                 continue
             e.insert(i, e1[i])
         return e
+
 
     def sheetToList(self, sheet):
         res = []

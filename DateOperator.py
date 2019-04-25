@@ -39,7 +39,7 @@ class Dater():
         except:
             return 'Отсуствуют данные по данному городу'
         print('daySplitted - ' + str(daySplitted) + ' ' + str(city))
-        s = ''
+        s = []
         for d in daySplitted:
             matches = d.count('*') 
             # print('days[] ' + str(d[:-matches]))
@@ -48,8 +48,9 @@ class Dater():
             except:
                 td = timedelta(days=7*matches + self.days[d] - curr)
             dd = dateForm+td
-            s = s + " " + str(dd.date())
-        return s
+            # s = s + " " + str(dd.date())
+            s.append(str(dd.date()))
+        return s[0]
             
 
             

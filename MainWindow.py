@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import QDate
 
 class MainWindow(QWidget):
     def __init__(self, task):
@@ -71,6 +72,8 @@ class MainWindow(QWidget):
         vbox.addWidget(QLabel('Если выставлен выходной день, дата переносится на ближайщий рабочий день следующей недели'))
         self.calendarLabel = QLabel('')
         vbox.addWidget(self.calendarLabel)
+        y, m, d = self.task.getOptimalDate()
+        self.calendar.setSelectedDate(QDate(y, m, d))
         vbox.addStretch(1)
         qw = QWidget()
         qw.setLayout(vbox)
